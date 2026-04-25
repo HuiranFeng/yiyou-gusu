@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>弈游姑苏 · 甜甜圈拍卖行</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+        body {
+            background: #f7f3e8;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            padding: 16px;
+            margin: 0;
+            color: #2c3e2f;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        h1 {
+            font-size: 1.8rem;
+            margin: 0 0 4px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+        .sub {
+            color: #5a6e4a;
+            margin-bottom: 20px;
+            border-left: 4px solid #8baa6e;
+            padding-left: 12px;
+        }
+        .dashboard {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .players-panel {
+            flex: 2;
+            min-width: 280px;
+        }
+        .auction-panel {
+            flex: 3;
+            min-width: 320px;
+        }
+        .player-card {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            margin-bottom: 16px;
+            padding: 12px 16px;
+            border: 1px solid #e2dcd0;
+        }
+        .player-name {
+            font-weight: 700;
+            font-size: 1.1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .player-stats {
+            display: flex;
+            gap: 16px;
+            margin: 10px 0 8px;
+            font-size: 0.85rem;
+            background: #fef9e6;
+            padding: 6px 12px;
+            border-radius: 40px;
+            flex-wrap: wrap;
+        }
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .green-coin {
+            font-weight: bold;
+            background: #d9e6b3;
+            padding: 4px 12px;
+            border-radius: 40px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        button.small {
+            background: #e7e3d8;
+            border: none;
+            border-radius: 40px;
+            padding: 6px 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        .card-stage {
+            background: #fff6e8;
+            border-radius: 32px;
+            padding: 20px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            border: 2px solid #dccfaf;
+        }
+        .current-card {
+            text-align: center;
+        }
+        .card-name {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin: 8px 0;
+        }
+        .card-effect {
+            background: #2c3e2f;
+            color: #f9f1df;
+            padding: 12px;
+            border-radius: 48px;
+            font-weight: 500;
+        }
+        .bid-area {
+            margin-top: 20px;
+            background: #f0ebdf;
+            border-radius: 28px;
+            padding: 16px;
+        }
+        .bid-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            margin: 12px 0;
+        }
+        select, input, button {
+            font-size: 1rem;
+            padding: 10px 14px;
+            border-radius: 60px;
+            border: 1px solid #ccc;
+            background: white;
+        }
+        button {
+            background: #8baa6e;
+            color: white;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            transition: 0.1s;
+        }
+        button:active {
+            transform: scale(0.97);
+        }
+        .highest-bid {
+            background: #d9d0b5;
+            border-radius: 32px;
+            padding: 10px;
+            margin-top: 12px;
+            font-size: 0.9rem;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+        .log-area {
+            background: #fef8ef;
+            border-radius: 24px;
+            padding: 12px;
+            font-size: 0.8rem;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #e2d2b6;
+        }
+        hr {
+            margin: 16px 0;
+            border-color: #ddd2bb;
+        }
+        @media (max-width: 700px) {
+            .player-stats { flex-wrap: wrap; gap: 8px; }
+            .bid-controls { flex-direction: column; align-items: stretch; }
+        }
+        .tag {
+            background: #f5e7c8;
+            border-radius: 20px;
+            padding: 4px 10px;
+            font-size: 0.7rem;
+        }
+        footer {
+            text-align: center;
+            margin-top: 32px;
+            font-size: 0.7rem;
+            color: #8b7a62;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🍩 甜甜圈拍卖行 · 弈游姑苏 <span style="font-size: 0.9rem;">🎲 合作才能全员安全</span></h1>
+    <div class="sub">用绿币竞拍「调整卡」—— 改变社会基础 & 生态天花板，让所有玩家进入甜甜圈安全区 (30~70)</div>
+
+    <div class="dashboard">
+        <div class="players-panel" id="playersPanel"></div>
+        <div class="auction-panel">
+            <div class="card-stage">
+                <div class="current-card">
+                    <div style="font-size: 0.8rem; letter-spacing: 1px;">🏷️ 当前拍卖卡牌</div>
+                    <div class="card-name" id="cardName">-</div>
+                    <div class="card-effect" id="cardEffect">等待开始</div>
+                    <div id="cardPrice" style="margin-top: 8px;">起拍价: <strong>--</strong> 绿币</div>
+                </div>
+
+                <div class="bid-area">
+                    <div style="font-weight: bold;">💰 出价竞拍</div>
+                    <div class="bid-controls">
+                        <select id="bidderSelect" style="flex:2">
+                            <option value="">选择玩家</option>
+                        </select>
+                        <input type="number" id="bidAmount" placeholder="出价 (≥起拍价)" step="1" min="0" style="flex:1">
+                        <button id="placeBidBtn">➕ 出价</button>
+                    </div>
+                    <div id="currentBidInfo" class="highest-bid">⏳ 暂无出价</div>
+                    <div class="action-buttons">
+                        <button id="confirmSaleBtn">✅ 成交 (给最高出价者)</button>
+                        <button id="nextCardBtn">🎲 下一张卡</button>
+                        <button id="resetAuctionBtn">🔄 重置当前卡</button>
+                        <button id="restartRoundBtn" style="background:#b0a07e;">🔄 再来一轮</button>
+                        <button id="resetGameBtn" style="background:#b07e5e;">🔁 重置游戏</button>
+                    </div>
+                    <div style="font-size: 0.7rem; margin-top: 8px; color:#6b5a3e;">
+                        💡 小提示：成交后卡牌效果立即生效。可联合竞拍/借贷，手动调整玩家绿币即可。
+                    </div>
+                </div>
+            </div>
+
+            <div class="log-area">
+                <div style="font-weight: bold; margin-bottom: 8px;">📜 拍卖纪事</div>
+                <div id="logList">✨ 准备就绪，点击「下一张卡」开始拍卖<br></div>
+            </div>
+            <div style="margin-top: 12px; display: flex; gap: 12px; justify-content: flex-end;">
+                <button id="addCoinsBtn" style="background:#b0a07e;">💰 给玩家加绿币</button>
+                <button id="editStatsBtn" style="background:#b0a07e;">📊 编辑双轨值</button>
+            </div>
+        </div>
+    </div>
+    <footer>🏆 胜利目标：所有玩家社会基础 30~70 且 生态天花板 30~70。卡牌可互助/陷害，合作才能全员安全！</footer>
+</div>
+
+<script>
+    // ======================== 卡牌库 (不变) ========================
+    const CARD_DB = [
+        { name: "🍔 外卖成瘾", effect: "指定一人 S+3，E+5", apply: (p, target, all) => { if(target) { target.social += 3; target.eco += 5; return `${target.name} 社会+3，生态+5`; } return "目标无效"; }, basePrice: 4, needTarget: true },
+        { name: "🛍️ 冲动消费", effect: "自己 S+8，E+5", apply: (p) => { p.social += 8; p.eco += 5; return `${p.name} 社会+8，生态+5`; }, basePrice: 5 },
+        { name: "🧹 断舍离", effect: "自己 S-6，E-1", apply: (p) => { p.social += -6; p.eco += -1; return `${p.name} 社会-6，生态-1`; }, basePrice: 7 },
+        { name: "🧹 精简生活", effect: "自己 S-6，E+2", apply: (p) => { p.social += -6; p.eco += 2; return `${p.name} 社会-6，生态+2`; }, basePrice: 7 },
+        { name: "🌱 社区种植", effect: "自己 S+5，E-3", apply: (p) => { p.social += 5; p.eco += -3; return `${p.name} 社会+5，生态-3`; }, basePrice: 8 },
+        { name: "♻️ 旧物修复", effect: "自己 E-6，S-2", apply: (p) => { p.social += -2; p.eco += -6; return `${p.name} 生态-6，社会-2`; }, basePrice: 10 },
+        { name: "🤝 邻里互助", effect: "选一人 S+4，自己 S+2", apply: (p, target) => { if(target && target !== p) { target.social += 4; p.social += 2; return `${p.name} 互助 ${target.name}：${target.name}社会+4，${p.name}社会+2`; } else { p.social += 2; return `${p.name} 对自己使用，仅社会+2`; } }, basePrice: 12, needTarget: true },
+        { name: "🌳 古树保护", effect: "指定一人 E-8，S-1", apply: (p, target) => { if(target) { target.social += -1; target.eco += -8; return `${target.name} 生态-8，社会-1`; } return "无效"; }, basePrice: 14, needTarget: true },
+        { name: "📦 减少包装", effect: "全体 E-2", apply: (p, target, allPlayers) => { allPlayers.forEach(pl => pl.eco += -2); return "全体玩家生态-2"; }, basePrice: 15 }
+    ];
+
+    // ======================== 8个玩家初始数据（易出效果的角色） ========================
+    const DEFAULT_PLAYERS = [
+        { id: 0, name: "🛍️ 冲动买家", coins: 0, social: 35, eco: 75 },
+        { id: 1, name: "📱 数字游民", coins: 0, social: 28, eco: 68 },
+        { id: 2, name: "🌱 新手环保者", coins: 0, social: 40, eco: 62 },
+        { id: 3, name: "🧘 慢活族", coins: 0, social: 70, eco: 30 },
+        { id: 4, name: "🍽️ 美食探险家", coins: 0, social: 50, eco: 60 },
+        { id: 5, name: "🧵 手作人", coins: 0, social: 60, eco: 40 },
+        { id: 6, name: "🚲 低碳通勤者", coins: 0, social: 55, eco: 45 },
+        { id: 7, name: "🤝 社区联结者", coins: 0, social: 60, eco: 40 }
+    ];
+
+    let players = [];
+    let currentCardIndex = 0;
+    let shuffledCards = [];
+    let currentCard = null;
+    let currentBids = [];
+    let logEntries = [];
+
+    // DOM 元素
+    const playersPanel = document.getElementById('playersPanel');
+    const cardNameSpan = document.getElementById('cardName');
+    const cardEffectSpan = document.getElementById('cardEffect');
+    const cardPriceSpan = document.getElementById('cardPrice');
+    const bidderSelect = document.getElementById('bidderSelect');
+    const bidAmountInput = document.getElementById('bidAmount');
+    const placeBidBtn = document.getElementById('placeBidBtn');
+    const confirmSaleBtn = document.getElementById('confirmSaleBtn');
+    const nextCardBtn = document.getElementById('nextCardBtn');
+    const resetAuctionBtn = document.getElementById('resetAuctionBtn');
+    const restartRoundBtn = document.getElementById('restartRoundBtn');
+    const resetGameBtn = document.getElementById('resetGameBtn');
+    const currentBidInfoDiv = document.getElementById('currentBidInfo');
+    const logListDiv = document.getElementById('logList');
+    const addCoinsBtn = document.getElementById('addCoinsBtn');
+    const editStatsBtn = document.getElementById('editStatsBtn');
+
+    function addLog(msg) {
+        logEntries.unshift(msg);
+        if(logEntries.length > 30) logEntries.pop();
+        logListDiv.innerHTML = logEntries.map(m => `🍩 ${m}`).join('<br>');
+    }
+
+    function renderPlayers() {
+        playersPanel.innerHTML = '';
+        players.forEach(p => {
+            const safeSocial = (p.social >= 30 && p.social <= 70);
+            const safeEco = (p.eco >= 30 && p.eco <= 70);
+            const dangerSocial = p.social < 30 ? '⚠️ 社会低下' : (p.social > 70 ? '⚡ 社会过载' : '');
+            const dangerEco = p.eco < 30 ? '🌿 生态过低' : (p.eco > 70 ? '🔥 突破天花板' : '');
+            const card = document.createElement('div');
+            card.className = 'player-card';
+            card.innerHTML = `
+                <div class="player-name">
+                    <span>${p.name}</span>
+                    <span class="green-coin">💚 ${p.coins} 绿币</span>
+                </div>
+                <div class="player-stats">
+                    <div class="stat">📊 社会: ${p.social} ${!safeSocial ? '🔴' : '✅'}</div>
+                    <div class="stat">🌍 生态: ${p.eco} ${!safeEco ? '🔴' : '✅'}</div>
+                </div>
+                <div style="font-size:0.7rem; color:#8f7a55;">${dangerSocial || dangerEco || (safeSocial && safeEco ? '🎯 甜甜圈安全区' : '⚖️ 需要调整')}</div>
+                <div style="margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button class="small" data-id="${p.id}" data-action="add5">➕5绿币</button>
+                    <button class="small" data-id="${p.id}" data-action="sub5">➖5绿币</button>
+                    <button class="small" data-id="${p.id}" data-action="edit">✏️ 修改双轨</button>
+                </div>
+            `;
+            playersPanel.appendChild(card);
+        });
+        document.querySelectorAll('[data-action="add5"]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const id = parseInt(btn.dataset.id);
+                const p = players.find(p => p.id === id);
+                if(p) { p.coins += 5; addLog(`${p.name} 绿币 +5`); renderPlayers(); updateBidderSelect(); }
+            });
+        });
+        document.querySelectorAll('[data-action="sub5"]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const id = parseInt(btn.dataset.id);
+                const p = players.find(p => p.id === id);
+                if(p && p.coins >= 5) { p.coins -= 5; addLog(`${p.name} 绿币 -5`); renderPlayers(); updateBidderSelect(); }
+                else if(p) addLog(`${p.name} 绿币不足`);
+            });
+        });
+        document.querySelectorAll('[data-action="edit"]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const id = parseInt(btn.dataset.id);
+                const p = players.find(p => p.id === id);
+                if(p) {
+                    let newS = prompt(`输入 ${p.name} 新的社会基础值 (0-100)`, p.social);
+                    let newE = prompt(`输入 ${p.name} 新的生态天花板值 (0-100)`, p.eco);
+                    if(newS !== null && !isNaN(newS)) p.social = Math.min(100, Math.max(0, parseInt(newS)));
+                    if(newE !== null && !isNaN(newE)) p.eco = Math.min(100, Math.max(0, parseInt(newE)));
+                    addLog(`✏️ 手动修改 ${p.name} → S:${p.social} E:${p.eco}`);
+                    renderPlayers();
+                }
+            });
+        });
+        updateBidderSelect();
+    }
+
+    function updateBidderSelect() {
+        let html = '<option value="">选择玩家</option>';
+        players.forEach(p => {
+            html += `<option value="${p.id}">${p.name} (💰${p.coins})</option>`;
+        });
+        bidderSelect.innerHTML = html;
+    }
+
+    // 洗牌并重置卡牌索引
+    function shuffleAndResetCards() {
+        shuffledCards = [...CARD_DB];
+        for(let i=shuffledCards.length-1; i>0; i--) {
+            const j = Math.floor(Math.random()*(i+1));
+            [shuffledCards[i], shuffledCards[j]] = [shuffledCards[j], shuffledCards[i]];
+        }
+        currentCardIndex = 0;
+        loadNextCard();
+        currentBids = [];
+        updateBidDisplay();
+    }
+
+    function loadNextCard() {
+        if(currentCardIndex >= shuffledCards.length) {
+            addLog("🏁 所有卡牌已拍卖完毕！游戏结束，可点击「再来一轮」继续。");
+            currentCard = null;
+            cardNameSpan.innerText = "✨ 拍卖结束 ✨";
+            cardEffectSpan.innerText = "点击再来一轮";
+            cardPriceSpan.innerHTML = "起拍价: --";
+            return;
+        }
+        currentCard = { ...shuffledCards[currentCardIndex] };
+        cardNameSpan.innerText = currentCard.name;
+        cardEffectSpan.innerText = currentCard.effect;
+        cardPriceSpan.innerHTML = `起拍价: ${currentCard.basePrice} 绿币`;
+        currentBids = [];
+        updateBidDisplay();
+        addLog(`🃏 新卡牌出现：【${currentCard.name}】 起拍价 ${currentCard.basePrice}`);
+        currentCardIndex++;
+    }
+
+    function updateBidDisplay() {
+        if(!currentCard) {
+            currentBidInfoDiv.innerHTML = "⏳ 无进行中的拍卖";
+            return;
+        }
+        if(currentBids.length === 0) {
+            currentBidInfoDiv.innerHTML = `💰 当前最高出价：无 &nbsp;&nbsp; 起拍价 ${currentCard.basePrice} 绿币`;
+        } else {
+            const sorted = [...currentBids].sort((a,b)=>b.amount - a.amount);
+            const top = sorted[0];
+            const bidder = players.find(p=>p.id === top.playerId);
+            currentBidInfoDiv.innerHTML = `🏆 最高出价：${bidder?.name || '?'} 出价 ${top.amount} 绿币`;
+        }
+    }
+
+    function placeBid() {
+        if(!currentCard) { addLog("没有正在拍卖的卡牌"); return; }
+        const playerId = parseInt(bidderSelect.value);
+        if(isNaN(playerId)) { addLog("请选择玩家"); return; }
+        const player = players.find(p=>p.id === playerId);
+        if(!player) return;
+        let bidAmount = parseInt(bidAmountInput.value);
+        if(isNaN(bidAmount) || bidAmount < currentCard.basePrice) {
+            addLog(`出价不能低于起拍价 ${currentCard.basePrice}`);
+            return;
+        }
+        if(bidAmount > player.coins) {
+            addLog(`${player.name} 绿币不足，无法出价 ${bidAmount}`);
+            return;
+        }
+        let highest = currentBids.length ? Math.max(...currentBids.map(b=>b.amount)) : 0;
+        if(bidAmount <= highest) {
+            addLog(`出价必须高于当前最高价 ${highest}`);
+            return;
+        }
+        currentBids = currentBids.filter(b => b.playerId !== playerId);
+        currentBids.push({ playerId, amount: bidAmount });
+        addLog(`${player.name} 出价 ${bidAmount} 绿币`);
+        updateBidDisplay();
+        bidAmountInput.value = '';
+    }
+
+    async function confirmSale() {
+        if(!currentCard) { addLog("没有拍卖卡牌可成交"); return; }
+        if(currentBids.length === 0) { addLog("尚无出价，无法成交"); return; }
+        const sorted = [...currentBids].sort((a,b)=>b.amount - a.amount);
+        const winnerBid = sorted[0];
+        const winner = players.find(p=>p.id === winnerBid.playerId);
+        if(!winner) return;
+        if(winner.coins < winnerBid.amount) {
+            addLog(`${winner.name} 绿币不足 ${winnerBid.amount}，成交失败！`);
+            currentBids = currentBids.filter(b=>b.playerId !== winner.id);
+            updateBidDisplay();
+            return;
+        }
+        winner.coins -= winnerBid.amount;
+        addLog(`🎉 成交！${winner.name} 以 ${winnerBid.amount} 绿币拍得【${currentCard.name}】`);
+
+        const applyEffect = (card, buyer, allPlayers) => {
+            if(card.needTarget) {
+                const targetNames = allPlayers.map((p,i)=>`${i+1}. ${p.name}`).join('\n');
+                let targetIndex = prompt(`请选择效果目标 (输入编号):\n${targetNames}\n(若自己或取消则默认对自己)`, "1");
+                let targetPlayer = buyer;
+                if(targetIndex !== null && !isNaN(parseInt(targetIndex)-1)) {
+                    const idx = parseInt(targetIndex)-1;
+                    if(idx >=0 && idx < allPlayers.length) targetPlayer = allPlayers[idx];
+                }
+                const res = card.apply(buyer, targetPlayer, allPlayers);
+                addLog(`✨ 效果: ${res}`);
+            } else {
+                const res = card.apply(buyer, null, allPlayers);
+                addLog(`✨ 效果: ${res}`);
+            }
+            allPlayers.forEach(p => {
+                p.social = Math.min(100, Math.max(0, p.social));
+                p.eco = Math.min(100, Math.max(0, p.eco));
+            });
+            renderPlayers();
+        };
+        await applyEffect(currentCard, winner, players);
+        currentBids = [];
+        updateBidDisplay();
+        renderPlayers();
+        addLog(`💡 点击「下一张卡」继续拍卖`);
+    }
+
+    function resetCurrentAuction() {
+        currentBids = [];
+        updateBidDisplay();
+        addLog(`🔄 重置当前卡牌竞价，所有出价已清空`);
+    }
+
+    // 再来一轮：只重置卡牌，玩家数值保留
+    function restartRound() {
+        shuffleAndResetCards();
+        addLog(`🔄 再来一轮！所有卡牌已重置，玩家数值和绿币保持不变。`);
+    }
+
+    // 重置游戏：清空所有玩家状态、卡牌、竞价、日志
+    function resetGame() {
+        // 重置玩家数据（深拷贝默认值）
+        players = JSON.parse(JSON.stringify(DEFAULT_PLAYERS));
+        // 重置卡牌相关
+        shuffleAndResetCards();  // 内部会重置 cardIndex, currentCard, 洗牌, 清空 bids
+        currentBids = [];
+        updateBidDisplay();
+        // 清空日志
+        logEntries = [];
+        addLog(`🔁 游戏已重置！所有玩家绿币归零，双轨值恢复初始，卡牌已重新洗牌。`);
+        renderPlayers();
+        updateBidderSelect();
+    }
+
+    function quickAddCoins() {
+        let id = prompt("输入玩家ID (0-7)\n0冲动买家 1数字游民 2新手环保者 3慢活族 4美食探险家 5手作人 6低碳通勤者 7社区联结者");
+        if(id !== null && !isNaN(parseInt(id))) {
+            let p = players.find(p=>p.id === parseInt(id));
+            if(p) {
+                let amount = parseInt(prompt("增加绿币数量", "10"));
+                if(!isNaN(amount)) { p.coins += amount; addLog(`✨ ${p.name} 绿币 +${amount}`); renderPlayers(); updateBidderSelect(); }
+            }
+        }
+    }
+
+    function editAnyStats() {
+        let id = prompt("输入玩家ID (0-7)");
+        if(id !== null && !isNaN(parseInt(id))) {
+            let p = players.find(p=>p.id === parseInt(id));
+            if(p) {
+                let newS = prompt(`社会基础 (现在 ${p.social})`, p.social);
+                let newE = prompt(`生态天花板 (现在 ${p.eco})`, p.eco);
+                if(newS !== null && !isNaN(newS)) p.social = Math.min(100, Math.max(0, parseInt(newS)));
+                if(newE !== null && !isNaN(newE)) p.eco = Math.min(100, Math.max(0, parseInt(newE)));
+                addLog(`✏️ 编辑 ${p.name} → S:${p.social} E:${p.eco}`);
+                renderPlayers();
+            }
+        }
+    }
+
+    function init() {
+        players = JSON.parse(JSON.stringify(DEFAULT_PLAYERS));
+        shuffleAndResetCards();
+        renderPlayers();
+        placeBidBtn.addEventListener('click', placeBid);
+        confirmSaleBtn.addEventListener('click', confirmSale);
+        nextCardBtn.addEventListener('click', () => { if(currentCardIndex < shuffledCards.length || currentCard) loadNextCard(); else addLog("所有卡已拍完，请点再来一轮"); });
+        resetAuctionBtn.addEventListener('click', resetCurrentAuction);
+        restartRoundBtn.addEventListener('click', restartRound);
+        resetGameBtn.addEventListener('click', resetGame);
+        addCoinsBtn.addEventListener('click', quickAddCoins);
+        editStatsBtn.addEventListener('click', editAnyStats);
+    }
+
+    init();
+</script>
+</body>
+</html>
